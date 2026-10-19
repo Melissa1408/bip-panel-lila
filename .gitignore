@@ -1,0 +1,17 @@
+# Datos personales y secretos: nunca al repo
+bip-respaldo-*.json
+*.local.json
+data/
+.env
+.env.*
+node_modules/
+.claude/
+
+# Material privado de una persona (nunca al repo público)
+private/
+
+# Configuración local con claves (se genera desde .env)
+apps-script/Setup.local.gs
+
+# La plantilla sí se sube (no contiene claves)
+!.env.example
