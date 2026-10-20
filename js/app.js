@@ -124,7 +124,11 @@
     toast(err && err.message ? err.message : 'Ocurrió un error.');
   }
 
-  const ui = { ready: false, bootError: '', usage: null, sync: 'idle', tab: 'panel', pMonth: 0, memSub: 'resumen', insFilter: 'all', weekOffset: 0, monthOffset: 0, calView: 'mes', focus: null, busy: false, lastPostId: null, filtro: 'todos' };
+  const ui = { pinned: true, pinOpen: null, ready: false, bootError: '', usage: null, sync: 'idle', tab: 'panel', pMonth: 0, memSub: 'resumen', insFilter: 'all', weekOffset: 0, monthOffset: 0, calView: 'mes', focus: null, busy: false, lastPostId: null, filtro: 'todos' };
+
+  try { const pr = JSON.parse(localStorage.getItem('bipl.prefs') || '{}'); if (typeof pr.pinned === 'boolean') ui.pinned = pr.pinned; if (typeof pr.pinOpen === 'boolean') ui.pinOpen = pr.pinOpen; } catch (e) { /* sin preferencias */ }
+  if (ui.pinOpen === null) ui.pinOpen = !!(window.matchMedia && window.matchMedia('(min-width: 861px)').matches);   // en celular empieza plegado
+  const savePrefs = () => { try { localStorage.setItem('bipl.prefs', JSON.stringify({ pinned: ui.pinned, pinOpen: ui.pinOpen })); } catch (e) { /* nada */ } };
 
   function toast(msg) {
     const t = $('#toast'); t.textContent = msg; t.classList.add('show');
@@ -317,6 +321,28 @@
       <div class="legend2"><span><i class="sw h1"></i>1 post</span><span><i class="sw h2"></i>2 posts</span><span><i class="sw h3"></i>3 o más</span><span>📅 programado</span></div></section>`;
   }
 
+  // Preguntas que suelen bastar para un buen post. Cada una añade su encabezado al texto, listo para responder.
+  const PREGUNTAS = [
+    ['🧩', '¿Qué problema enfrentas en tu proyecto?', 'Problema que enfrento: '],
+    ['🪜', '¿Cómo lo solucionaste? Cuéntalo en pasos', 'Cómo lo solucioné (paso a paso):\n1) \n2) \n3) '],
+    ['🧰', '¿Qué herramientas o técnicas usaste?', 'Herramientas o técnicas que usé: '],
+    ['📊', '¿Qué resultado obtuviste? Un dato real, aunque sea cero', 'Resultado (con un dato real): '],
+    ['💡', '¿Qué te sorprendió o qué decidiste, y por qué?', 'Lo que me sorprendió o decidí, y por qué: '],
+    ['🔭', '¿Qué harás distinto o qué sigue?', 'Qué haré distinto / qué sigue: ']
+  ];
+  // Quita los encabezados de la plantilla que quedaron sin responder, para no enviarlos a la IA.
+  function cleanDraft(t) {
+    const vacios = /^(Problema que enfrento|Cómo lo solucioné \(paso a paso\)|Herramientas o técnicas que usé|Resultado \(con un dato real\)|Lo que me sorprendió o decidí, y por qué|Qué haré distinto \/ qué sigue):\s*$/;
+    return String(t || '').split('\n').filter((l) => !vacios.test(l.trim()) && !/^\d\)\s*$/.test(l.trim())).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  }
+  function pinCard() {
+    return `<section class="card pinbox ${ui.pinned ? 'pinned' : ''} ${ui.pinOpen ? '' : 'shut'}"><div class="row between wrap"><h3>📌 Preguntas guía</h3>
+      <div class="row"><button class="btn sm ghost pinfix" data-act="pintoggle" title="Mantenerla a la vista al bajar">${ui.pinned ? 'Soltar' : 'Fijar'}</button><button class="btn sm" data-act="pinshow">${ui.pinOpen ? 'Ocultar' : 'Ver preguntas'}</button></div></div>
+      <div class="pinbody"><p class="muted">Responde las que tengas a mano; no hace falta contestarlas todas. Toca una para añadirla a tu texto.</p>
+      <ol class="pinq">${PREGUNTAS.map((q, i) => `<li><button type="button" class="qbtn" data-act="qadd" data-i="${i}"><span class="qi">${q[0]}</span><span>${esc(q[1])}</span></button></li>`).join('')}</ol>
+      <div class="row wrap"><button class="btn sm primary" data-act="qall">Usarlas todas como plantilla</button></div></div></section>`;
+  }
+
   function viewPanel() {
     const st = genStats(), nombre = (S.profile.nombre || '').split(' ')[0];
     const pct = Math.min(100, Math.round((st.week / st.goal) * 100)), falta = Math.max(0, st.goal - st.week);
@@ -334,7 +360,7 @@
       <div class="kpi"><div class="kv">${st.total}</div><div class="kl">Posts en total</div></div>
     </div>
     <div class="panelgrid">
-      <div class="pcol">
+      <div class="pcol pcol1">
         <section class="card">
           <h2>¿Qué aprendiste o decidiste hoy?</h2>
           <p class="muted">Cuéntalo como se lo contarías a alguien: dicta, sube un audio o escribe. Mientras más natural, mejor suena el post.</p>
@@ -349,7 +375,7 @@
         </section>
         ${last ? `<h3 class="sec">Tu post</h3>${nav}${postCard(last)}` : ''}
       </div>
-      <div class="pcol">${countCalendar()}${alertsCard()}</div>
+      <div class="pcol pcol2">${pinCard()}${countCalendar()}${alertsCard()}</div>
     </div>`;
   }
 
@@ -526,7 +552,7 @@ $1</section>`}
   }
   function setStatus(m) { const s = $('#status'); if (s) s.textContent = m; }
   async function generate() {
-    const txt = ($('#txt').value || '').trim();
+    const txt = cleanDraft($('#txt').value);
     if (txt.length < 30) return toast('Cuéntame un poco más (al menos un par de frases).');
     if (ui.usage && ui.usage.ai.used >= ui.usage.ai.limit) return toast(limitText());
     if (ui.busy) return; ui.busy = true; $('#genBtn').disabled = true; setStatus('Generando… (unos segundos)');
@@ -615,6 +641,17 @@ $1</section>`}
         S.audiences.push({ nombre: n, busca: $('#audB').value.trim(), evitar: $('#audE').value.trim() }); save(); return render();
       }
       if (a === 'delaud') { S.audiences.splice(+el.dataset.i, 1); save(); return render(); }
+      if (a === 'pintoggle') { ui.pinned = !ui.pinned; savePrefs(); return render(); }
+      if (a === 'pinshow') { ui.pinOpen = !ui.pinOpen; savePrefs(); return render(); }
+      if (a === 'qadd' || a === 'qall') {
+        const box = $('#txt'); if (!box) return;
+        const items = a === 'qall' ? PREGUNTAS : [PREGUNTAS[+el.dataset.i]];
+        let add = '';
+        items.forEach((q) => { if (!box.value.includes(q[2].split('\n')[0].trim()) && !add.includes(q[2].split('\n')[0].trim())) add += (add ? '\n\n' : '') + q[2]; });
+        if (add) box.value += (box.value && !/\n\n$/.test(box.value) ? (box.value.endsWith('\n') ? '\n' : '\n\n') : '') + add;
+        box.focus(); box.setSelectionRange(box.value.length, box.value.length); box.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        return;
+      }
       if (a === 'memsub') { ui.memSub = el.dataset.v; return render(); }
       if (a === 'pmonth') { ui.pMonth = el.dataset.d === '0' ? 0 : ui.pMonth + +el.dataset.d; return render(); }
       if (a === 'daypost') {

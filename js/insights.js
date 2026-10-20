@@ -51,20 +51,15 @@
     return { n: base.length, items: tot.map((x) => ({ nombre: x.nombre, pct: Math.round((x.pct / sum) * 1000) / 10 })) };
   }
 
-  // Barra apilada 100% (una fila): 2px de separación entre segmentos y extremos redondeados (recorte). Cada segmento lleva su <title> (tooltip).
-  let barSeq = 0;
+  // Barra apilada 100% (una fila) en HTML/CSS: así el texto conserva su tamaño en cualquier pantalla.
+  // 2px de separación entre segmentos, extremos redondeados, y cada segmento lleva su tooltip (title).
   function stackedBar(items, audiences, label) {
-    const W = 640, H = 30, gap = 2, id = 'sb' + (++barSeq);
-    const vis = items.filter((i) => i.pct > 0), total = W - gap * Math.max(0, vis.length - 1);
-    let x = 0;
+    const vis = items.filter((i) => i.pct > 0);
     const segs = vis.map((i) => {
-      const w = Math.max(2, (i.pct / 100) * total), idx = audiences.findIndex((a) => a.nombre === i.nombre);
-      const col = PALETA[Math.min(idx < 0 ? PALETA.length - 1 : idx, PALETA.length - 1)];
-      const pct = w > 44 ? `<text x="${x + w / 2}" y="${H / 2 + 4}" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">${Math.round(i.pct)}%</text>` : '';
-      const seg = `<g><rect x="${x}" y="0" width="${w}" height="${H}" fill="${col}"><title>${esc(i.nombre)}: ${i.pct}%</title></rect>${pct}</g>`;
-      x += w + gap; return seg;
+      const idx = audiences.findIndex((a) => a.nombre === i.nombre), col = PALETA[Math.min(idx < 0 ? PALETA.length - 1 : idx, PALETA.length - 1)];
+      return `<div class="seg" style="flex:${i.pct} 1 0;background:${col}" title="${esc(i.nombre)}: ${i.pct}%"><span>${Math.round(i.pct)}%</span></div>`;
     });
-    return `<svg class="stack" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)}"><defs><clipPath id="${id}"><rect width="${W}" height="${H}" rx="8"/></clipPath></defs><g clip-path="url(#${id})">${segs.join('') || `<rect width="${W}" height="${H}" fill="#ece6fb"/>`}</g></svg>`;
+    return `<div class="stackbar" role="img" aria-label="${esc(label)}">${segs.join('') || '<div class="seg empty"></div>'}</div>`;
   }
 
   // Lista de barras horizontales (magnitud, un solo tono violeta)

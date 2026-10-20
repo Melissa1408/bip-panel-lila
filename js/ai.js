@@ -97,6 +97,7 @@ ${list(open)}
 - Preguntas: máximo 2 en "pendientes", de UNA línea, respondibles en una frase (menos de 30 segundos). Solo si sin ese dato el post no tiene sentido. Si el post se sostiene con lo que hay, devuelve "pendientes": [].
 - Elige el formato que el material YA cubre; no elijas uno que exija datos que no existen. Lo que falte y no sea esencial, omítelo (no lo inventes).
 - Si un dato esencial falta, redacta igual y deja "[por completar]" solo en ese punto.
+- El texto de ella puede traer encabezados guía ("Problema que enfrento:", "Cómo lo solucioné (paso a paso):"…). Son ayudas: usa su contenido, pero no los copies como etiquetas en el post. Si hay pasos numerados, conserva el orden.
 - "memoria": máximo 3 hechos, solo los que dijo explícitamente, cada uno en menos de 12 palabras.
 
 # NOMBRES PARA EL ANÁLISIS DEL PANEL

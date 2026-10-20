@@ -3,7 +3,7 @@
 Panel personal para convertir lo que alguien aprende o decide en posts de LinkedIn, ver cuántos ha generado y entender de qué habla, qué le cuesta y a quién le llega su contenido. Tono lila, pensado para una sola persona.
 
 ## Qué incluye
-- **Panel**: saludo, meta semanal (barra de progreso), posts generados este mes/semana, el generador (escribir, dictar o subir audio) y un **calendario del mes que cuenta cuántos posts se generaron cada día** (más oscuro = más) y marca los programados.
+- **Panel**: saludo, un **📌 Preguntas guía** (qué problema enfrentas, cómo lo solucionaste en pasos, herramientas, resultado, qué te sorprendió, qué sigue; tocar una la añade al texto) que queda fijo junto al generador, meta semanal (barra de progreso), posts generados este mes/semana, el generador (escribir, dictar o subir audio) y un **calendario del mes que cuenta cuántos posts se generaron cada día** (más oscuro = más) y marca los programados.
 - **Calendario**: planificación de publicaciones (mes y semana, arrastrar y soltar).
 - **Posts**: borrador → editado → publicado, con versiones anteriores del hook/texto y botón *Guardar en calendario*.
 - **Mi memoria → Resumen**: *Temas que tocas*, *Dificultades que atraviesas*, *Herramientas que usas*, *Tecnicismos y métricas*, *Para qué escribes* (objetivo de cada post) y el **medidor de público**: reparto en % entre sus avatares, con un selector para ver cómo cambia por tema u objetivo.
@@ -12,6 +12,9 @@ Panel personal para convertir lo que alguien aprende o decide en posts de Linked
 El análisis (temas, dificultades, herramientas, tecnicismos, objetivo y reparto de público) lo devuelve la IA **al generar cada post**, sin llamadas extra. Para posts anteriores existe el botón **Analizar mis posts** (1 uso por cada 6 posts).
 
 > **El medidor de público es una estimación** según el contenido de cada post. No mide a quién llegó realmente en LinkedIn.
+
+## Celular
+El panel es responsive: en pantallas chicas la navegación pasa a una **barra inferior**, las preguntas guía van antes del generador (plegables) y los gráficos y tablas se adaptan al ancho. Se probó sin desbordes horizontales en 375 px de ancho.
 
 ## Cómo funciona (arquitectura)
 Página estática (GitHub Pages) + el **mismo servidor** del proyecto base (Google Apps Script + Google Sheets). Aquí no hay claves ni datos: la página solo habla con la URL de `js/config.js`. Los datos de la persona viven en su fila del Sheet, asociados a su correo.
